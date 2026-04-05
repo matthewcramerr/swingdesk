@@ -88,29 +88,89 @@ export default function CommandPage() {
         )}
 
         {!loading && status === "weekend" && (
-          <div style={{ textAlign: "center", padding: "80px 0" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🏖️</div>
-            <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 14, color: "#1a3040", letterSpacing: "0.2em", marginBottom: 12 }}>MARKETS CLOSED</div>
-            <div style={{ fontSize: 14, color: "#2a4050" }}>It's the weekend. Rest up.</div>
-            <div style={{ fontSize: 12, color: "#1a2535", marginTop: 8 }}>Next briefing: Monday at 9:25 AM ET.</div>
+          <div style={{ padding: "40px 0" }}>
+            {/* Fake ticker tape */}
+            <div style={{ background: "#090e15", border: "1px solid #131f2e", padding: "12px 16px", marginBottom: 24, overflow: "hidden" }}>
+              <div style={{ display: "flex", gap: 32, fontSize: 11, fontFamily: "'Orbitron', monospace", color: "#1a3040", whiteSpace: "nowrap" }}>
+                {["SPY --.--%","QQQ --.--%","NVDA --.--%","AAPL --.--%","MSFT --.--%","META --.--%","AMZN --.--%","TSLA --.--%"].map((t,i) => (
+                  <span key={i}>{t}</span>
+                ))}
+              </div>
+            </div>
+            <div style={{ background: "#090e15", border: "1px solid #131f2e", padding: "40px 24px", textAlign: "center" }}>
+              <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 11, color: "#1a3040", letterSpacing: "0.3em", marginBottom: 20 }}>
+                MARKET STATUS
+              </div>
+              <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#0a1520", border: "2px solid #1a2535", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 24 }}>
+                ◼
+              </div>
+              <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 18, color: "#2a4050", letterSpacing: "0.15em", marginBottom: 10 }}>
+                MARKETS CLOSED
+              </div>
+              <div style={{ fontSize: 13, color: "#1a3040", marginBottom: 6 }}>NYSE · NASDAQ · Weekend</div>
+              <div style={{ height: 1, background: "#0d1a24", margin: "20px 0" }} />
+              <div style={{ fontSize: 12, color: "#1a2535", letterSpacing: "0.1em" }}>
+                NEXT SESSION OPENS MONDAY
+              </div>
+              <div style={{ fontFamily: "'Orbitron'", fontWeight: 700, fontSize: 13, color: "#2a4050", marginTop: 6 }}>
+                9:25 AM ET — BRIEFING FIRES
+              </div>
+            </div>
+            {/* Weekend prep cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
+              {[
+                { label: "Use the screener", desc: "Research setups now so you're ready Monday", href: "/screener", icon: "◈" },
+                { label: "Run an autopsy", desc: "Grade this week's system performance", href: "/backtest", icon: "◎" },
+              ].map(c => (
+                <a key={c.label} href={c.href} style={{ textDecoration: "none" }}>
+                  <div style={{ background: "#090e15", border: "1px solid #131f2e", padding: "16px", cursor: "pointer" }}>
+                    <div style={{ fontFamily: "'Orbitron'", fontWeight: 700, fontSize: 10, color: "#2a4050", letterSpacing: "0.12em", marginBottom: 6 }}>
+                      {c.icon} {c.label.toUpperCase()}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#1a3040", lineHeight: 1.5 }}>{c.desc}</div>
+                  </div>
+                </a>
+              ))}
+            </div>
           </div>
         )}
 
         {!loading && status === "pre-market" && (
-          <div style={{ textAlign: "center", padding: "80px 0" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>⏳</div>
-            <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 14, color: "#1a3040", letterSpacing: "0.2em", marginBottom: 12 }}>BRIEFING GENERATES AT 9:25 AM ET</div>
-            <div style={{ fontSize: 14, color: "#2a4050" }}>Current ET time: {getETTime()}</div>
-            <div style={{ fontSize: 12, color: "#1a2535", marginTop: 8 }}>Check back after 9:25 AM — ready before the open.</div>
+          <div style={{ padding: "40px 0" }}>
+            <div style={{ background: "#090e15", border: "1px solid #131f2e", padding: "40px 24px", textAlign: "center", marginBottom: 8 }}>
+              <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 11, color: "#1a3040", letterSpacing: "0.3em", marginBottom: 20 }}>
+                MARKET STATUS
+              </div>
+              <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#0a1a10", border: "2px solid #1a3020", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 24, animation: "pulse 2s infinite" }}>
+                ◉
+              </div>
+              <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 18, color: "#1a4030", letterSpacing: "0.15em", marginBottom: 10 }}>
+                PRE-MARKET
+              </div>
+              <div style={{ fontSize: 13, color: "#1a3020", marginBottom: 6 }}>Briefing generates at 9:25 AM ET</div>
+              <div style={{ height: 1, background: "#0d1a24", margin: "20px 0" }} />
+              <div style={{ fontFamily: "'Orbitron'", fontWeight: 700, fontSize: 20, color: "#2a5040" }}>
+                {getETTime()} ET
+              </div>
+              <div style={{ fontSize: 11, color: "#1a2535", marginTop: 6, letterSpacing: "0.1em" }}>
+                CHECK BACK AFTER 9:25 AM
+              </div>
+            </div>
           </div>
         )}
 
         {!loading && status === "empty" && (
-          <div style={{ textAlign: "center", padding: "80px 0" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>📡</div>
-            <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 14, color: "#1a3040", letterSpacing: "0.2em", marginBottom: 12 }}>BRIEFING NOT YET AVAILABLE</div>
-            <div style={{ fontSize: 14, color: "#2a4050", maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>
-              Today's briefing generates automatically at 9:25 AM ET. Check back shortly.
+          <div style={{ padding: "40px 0", textAlign: "center" }}>
+            <div style={{ background: "#090e15", border: "1px solid #131f2e", padding: "40px 24px" }}>
+              <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 11, color: "#1a3040", letterSpacing: "0.3em", marginBottom: 20 }}>
+                SIGNAL LOST
+              </div>
+              <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 18, color: "#2a4050", letterSpacing: "0.15em", marginBottom: 10 }}>
+                BRIEFING PENDING
+              </div>
+              <div style={{ fontSize: 13, color: "#2a4050", lineHeight: 1.6 }}>
+                Auto-generates at 9:25 AM ET on trading days. Check back shortly.
+              </div>
             </div>
           </div>
         )}
