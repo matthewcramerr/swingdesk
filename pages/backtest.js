@@ -1,61 +1,16 @@
 import { useState } from "react";
 import { callClaude } from "../lib/claude";
 
-const BACKTEST_PROMPT = (ticker, weeks) => `You are a swing trading backtesting engine for SwingDesk.
+const BACKTEST_PROMPT = (ticker, weeks) => `Swing trading backtester for SwingDesk.
 
-TASK: Simulate what would have happened if our swing trading system had analyzed ${ticker} starting ${weeks} weeks ago and made trade decisions.
+Simulate what would have happened if our system analyzed ${ticker} starting ${weeks} weeks ago.
+Today: ${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
 
-TODAY: ${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-LOOKBACK: ${weeks} weeks ago to today
+Rules: Enter only score ≥75. Stop within 7%. Target 1 ~10-15%, Target 2 ~20-25%. Max hold 35 days. Exit before earnings.
 
-OUR SYSTEM RULES:
-- Enter only when score ≥75
-- Stop loss within 7% of entry
-- Target 1: first resistance (~10-15% gain), sell 1/3
-- Target 2: second resistance (~20-25% gain), sell 1/3  
-- Let remaining 1/3 run or exit on time stop (35 days max)
-- Exit immediately if earnings within 21 days
-- No more than 5 positions at once
+Use web search to get ${ticker}'s actual price history over the last ${weeks} weeks, news, and technicals.
 
-Use web search to get:
-1. ${ticker}'s actual price ${weeks} weeks ago
-2. What it did week by week during that period
-3. What our system WOULD have scored it at the start
-4. Whether it would have triggered an entry
-5. What the actual outcome would have been following our rules
-
-OUTPUT JSON only, no markdown:
-{
-  "ticker": "${ticker}",
-  "backtestWeeks": ${weeks},
-  "startDate": "date ${weeks} weeks ago",
-  "endDate": "today",
-  "startPrice": 0.00,
-  "endPrice": 0.00,
-  "systemScore": 0,
-  "wouldHaveEntered": true,
-  "entrySignalDate": "date when score would have hit 75+",
-  "entryPrice": 0.00,
-  "stopPrice": 0.00,
-  "target1Price": 0.00,
-  "target2Price": 0.00,
-  "outcome": "WIN_T1 | WIN_T2 | WIN_FULL | STOPPED_OUT | TIME_STOP | NO_ENTRY | EARNINGS_EXIT",
-  "exitPrice": 0.00,
-  "exitDate": "...",
-  "pnlPercent": 0.0,
-  "holdDays": 0,
-  "stoppedOut": false,
-  "hitTarget1": false,
-  "hitTarget2": false,
-  "weekByWeek": [
-    { "week": 1, "price": 0.00, "action": "HOLD|ENTER|EXIT|WATCH", "note": "brief note" }
-  ],
-  "systemAccuracy": "How well did our scoring logic predict the actual move?",
-  "whatWorked": "What part of our system logic was right",
-  "whatFailed": "What part of our system logic was wrong or missed",
-  "improvementSuggestion": "One specific tweak to our scoring system based on this result",
-  "verdict": "SYSTEM VALIDATED | SYSTEM NEEDS TUNING | INCONCLUSIVE"
-}`;
+Output JSON only: {"ticker":"${ticker}","backtestWeeks":${weeks},"startDate":"","endDate":"","startPrice":0,"endPrice":0,"systemScore":0,"wouldHaveEntered":true,"entrySignalDate":"","entryPrice":0,"stopPrice":0,"target1Price":0,"target2Price":0,"outcome":"WIN_T1|WIN_T2|WIN_FULL|STOPPED_OUT|TIME_STOP|NO_ENTRY|EARNINGS_EXIT","exitPrice":0,"exitDate":"","pnlPercent":0,"holdDays":0,"stoppedOut":false,"hitTarget1":false,"hitTarget2":false,"weekByWeek":[{"week":1,"price":0,"action":"HOLD|ENTER|EXIT|WATCH","note":""}],"systemAccuracy":"","whatWorked":"","whatFailed":"","improvementSuggestion":"","verdict":"SYSTEM VALIDATED|SYSTEM NEEDS TUNING|INCONCLUSIVE"}`;
 
 const WEEKLY_AUTOPSY_PROMPT = `You are the internal auditor for SwingDesk swing trading system.
 
