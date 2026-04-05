@@ -2,11 +2,12 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 
 const NAV_ITEMS = [
-  { href: "/",           label: "Command",   icon: "▲", desc: "Daily briefing" },
-  { href: "/screener",   label: "Screener",  icon: "◈", desc: "Score any ticker" },
-  { href: "/trades",     label: "Trades",    icon: "⊞", desc: "Trade log" },
-  { href: "/portfolio",  label: "Portfolio", icon: "◉", desc: "Matthew's Alpaca" },
-  { href: "/backtest",   label: "Backtest",  icon: "◎", desc: "Test & autopsy" },
+  { href: "/",             label: "Command",     icon: "▲" },
+  { href: "/screener",     label: "Screener",    icon: "◈" },
+  { href: "/trades",       label: "Trades",      icon: "⊞" },
+  { href: "/portfolio",    label: "Portfolio",   icon: "◉" },
+  { href: "/backtest",     label: "Backtest",    icon: "◎" },
+  { href: "/methodology",  label: "Methodology", icon: "⊙" },
 ];
 
 export default function Nav() {
