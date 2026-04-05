@@ -1,102 +1,9 @@
-import { useState } from "react";
-import { callClaude } from "../lib/claude";
-
-const TODAY = new Date().toLocaleDateString("en-US", {
-  weekday: "long", month: "long", day: "numeric", year: "numeric",
-});
-
-const DAILY_BRIEF_PROMPT = `You are the AI brain of SwingDesk — a private swing trading command center.
-
-Your job: Do ALL the analysis so the trader spends MAXIMUM 5 minutes reviewing your output and making decisions. You are not a chatbot. You are a chief of staff delivering a mission briefing.
-
-TODAY'S DATE: ${TODAY}
-
-THE SWINGDESK PHILOSOPHY:
-- Swing trades only: 3–35 day holds
-- Max 5 positions at once
-- No trades if macro is bad — cash IS a position
-- Score ≥75 to enter, ≥65 to watch
-- Never hold through earnings (within 21 days = flag)
-- Cut losses fast, let winners run in thirds
-- No $25k required — any account size
-
-SCORING SYSTEM (100pts total):
-- Trend Quality (22pts): 50-day EMA, slope, Stage 2, sector outperformance
-- Momentum (18pts): Weekly RSI 45-65, MACD weekly, RS vs S&P
-- Setup Quality (18pts): Base pattern, volatility compression, within 3-5% of pivot
-- Volume/Institutions (15pts): Accumulation weeks, volume dry-up, up-day volume
-- Fundamentals (12pts): Revenue growth >10% YoY, EPS growth, leading sector
-- Sentiment/News (15pts): News tone, macro/political headwinds, social velocity, analyst consensus
-
-HARD GATES (auto-fail regardless of score):
-- Earnings within 21 days → cap at 55
-- No clear stop within 7% → skip
-- Risk/reward below 2:1 → skip
-- Avg volume below 500K → skip
-
-UNIVERSE TO SCAN — use web search to check these specific names:
-Tier 1 Leaders: NVDA, META, AAPL, MSFT, GOOGL, AMZN, TSM, AVGO, AMD, CRM, NOW, UBER, SPOT, SHOP, CRWD
-Tier 2 ETFs: QQQ, SPY, XLK, XLE, XLF, XBI, GLD, SOXX, IWM, XLV
-Tier 3 Mid-Cap: PLTR, HOOD, COIN, RBLX, DUOL, CELH, SOUN, IOT, ANET, DDOG
-Macro Pulse: VIX level, S&P 500 vs 50-day EMA, put/call ratio, sector rotation
-
-CRITICAL INSTRUCTIONS:
-1. Use web search to get CURRENT prices, news, and market data
-2. Check for any major macro events TODAY (Fed decisions, CPI, geopolitical, major tweets/statements)
-3. Scan Tier 1 first, then ETFs, then mid-caps — only surface names that score 65+
-4. Be DIRECT. If nothing qualifies, say so clearly.
-5. The trader has 5 minutes. Prioritize ruthlessly.
-
-OUTPUT FORMAT — JSON only, no markdown, no preamble:
-{
-  "date": "...",
-  "generatedAt": "...",
-  "commanderCall": {
-    "status": "GO | CAUTION | STAND DOWN",
-    "headline": "One bold sentence summarizing the entire day",
-    "detail": "2-3 sentences on what the market is doing and what to focus on."
-  },
-  "marketPulse": {
-    "overall": "BULLISH | CAUTIOUS | BEARISH",
-    "spxVsEma": "ABOVE | AT | BELOW",
-    "vix": "number or range",
-    "vixStatus": "LOW | ELEVATED | HIGH",
-    "sectorRotation": "Brief description of where money is flowing",
-    "majorEventsToday": ["list any Fed, CPI, earnings, geopolitical events today"],
-    "tradingConditions": "FULL SIZE | HALF SIZE | WATCH ONLY | CASH"
-  },
-  "actionItems": [
-    {
-      "priority": 1,
-      "action": "ENTER | WATCH | EXIT | HOLD | AVOID",
-      "ticker": "...",
-      "assetType": "stock | etf | options",
-      "score": 0,
-      "whyNow": "One sentence — specific reason this is actionable TODAY",
-      "entry": "...",
-      "stop": "...",
-      "target1": "...",
-      "target2": "...",
-      "riskReward": "1:X",
-      "holdWindow": "X-Y days",
-      "earningsStatus": "CLEAR | CAUTION",
-      "positionSize": "full | half | quarter",
-      "urgency": "TODAY | THIS WEEK | NO RUSH"
-    }
-  ],
-  "activePositionAlerts": [
-    { "ticker": "...", "alert": "TRAIL STOP | TAKE PARTIAL | EXIT NOW | HOLD", "reason": "One sentence" }
-  ],
-  "nothingToDoNote": "If no action items, explain why. Empty string if there are action items.",
-  "sentimentFlags": ["Major news/tweets/policy that could impact universe in next 1-2 weeks"],
-  "weeklyContext": "One sentence on broader trend.",
-  "closingThought": "One punchy sentence. The single most important thing today."
-}`;
+import { useState, useEffect } from "react";
 
 const statusMeta = {
-  "GO":           { color: "#00ff88", bg: "#00ff8812", label: "GO",           icon: "▲" },
-  "CAUTION":      { color: "#ffd700", bg: "#ffd70012", label: "CAUTION",      icon: "◆" },
-  "STAND DOWN":   { color: "#ff6b6b", bg: "#ff6b6b12", label: "STAND DOWN",   icon: "▼" },
+  "GO":         { color: "#00ff88", bg: "#00ff8812", label: "GO",         icon: "▲" },
+  "CAUTION":    { color: "#ffd700", bg: "#ffd70012", label: "CAUTION",    icon: "◆" },
+  "STAND DOWN": { color: "#ff6b6b", bg: "#ff6b6b12", label: "STAND DOWN", icon: "▼" },
 };
 const actionMeta = {
   ENTER: { color: "#00ff88", bg: "#00ff8820" },
@@ -115,83 +22,102 @@ const scoreColor = s => s >= 75 ? "#00ff88" : s >= 60 ? "#ffd700" : "#ff6b6b";
 const vixColor   = v => v === "LOW" ? "#00ff88" : v === "ELEVATED" ? "#ffd700" : "#ff6b6b";
 const spxColor   = v => v === "ABOVE" ? "#00ff88" : v === "AT" ? "#ffd700" : "#ff6b6b";
 
-const STEPS = [
-  "Checking market conditions...",
-  "Scanning macro events & sentiment...",
-  "Running universe through scoring system...",
-  "Filtering setups ≥65...",
-  "Building your daily brief...",
-];
+function isWeekend() {
+  const day = new Date().getDay();
+  return day === 0 || day === 6;
+}
+
+function isBeforeMarket() {
+  const now = new Date();
+  const et = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  return et.getHours() < 9 || (et.getHours() === 9 && et.getMinutes() < 25);
+}
+
+function getETTime() {
+  return new Date().toLocaleString("en-US", {
+    timeZone: "America/New_York",
+    hour: "numeric", minute: "2-digit", hour12: true,
+  });
+}
 
 export default function CommandPage() {
-  const [data, setData]         = useState(null);
-  const [loading, setLoading]   = useState(false);
-  const [loadStep, setLoadStep] = useState(0);
+  const [data, setData]       = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus]   = useState("checking");
 
-  const generate = async () => {
-    setLoading(true);
-    setData(null);
-    setLoadStep(0);
-    let step = 0;
-    const t = setInterval(() => { step = Math.min(step + 1, STEPS.length - 1); setLoadStep(step); }, 2200);
-    try {
-      const result = await callClaude({ prompt: DAILY_BRIEF_PROMPT });
-      setData(result);
-    } catch (e) { console.error(e); }
-    clearInterval(t);
-    setLoading(false);
-  };
+  useEffect(() => {
+    if (isWeekend()) {
+      setStatus("weekend");
+      setLoading(false);
+      return;
+    }
+    fetch("/api/brief")
+      .then(r => r.json())
+      .then(res => {
+        if (res.hasData && res.data) {
+          setData(res.data);
+          setStatus("ready");
+        } else {
+          setStatus(isBeforeMarket() ? "pre-market" : "empty");
+        }
+        setLoading(false);
+      })
+      .catch(() => { setStatus("empty"); setLoading(false); });
+  }, []);
 
   const sm = data ? (statusMeta[data.commanderCall?.status] || statusMeta["CAUTION"]) : null;
 
   return (
     <div style={{ minHeight: "100vh", background: "#05080c", color: "#d4dde8", fontFamily: "'Rajdhani', sans-serif" }}>
       <style>{`
-        .briefing-btn { font-family:'Orbitron',monospace; font-weight:700; font-size:12px; letter-spacing:.15em; text-transform:uppercase; background:#00ff88; color:#05080c; border:none; cursor:pointer; padding:14px 36px; transition:all .2s; }
-        .briefing-btn:hover { background:#33ffaa; transform:translateY(-1px); }
-        .briefing-btn:disabled { background:#1a2535; color:#2a3d50; cursor:not-allowed; transform:none; }
         .card { background:#090e15; border:1px solid #131f2e; padding:18px; }
         .lbl { font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:#2a4050; margin-bottom:6px; font-weight:600; }
         .action-card { background:#090e15; border:1px solid #131f2e; padding:16px; margin-bottom:10px; position:relative; overflow:hidden; }
         .badge { display:inline-flex; align-items:center; padding:3px 10px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; font-weight:600; }
         .grid-macro { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
         .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-        .step-dot { width:8px; height:8px; border-radius:50%; background:#1a2535; transition:background .3s; }
-        .step-dot.active { background:#00ff88; }
-        .step-dot.done { background:#1a4030; }
-        @media(max-width:640px) { .grid-macro{grid-template-columns:repeat(2,1fr);} .grid-2{grid-template-columns:1fr;} }
+        @media(max-width:640px){.grid-macro{grid-template-columns:repeat(2,1fr);}.grid-2{grid-template-columns:1fr;}}
       `}</style>
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px" }}>
 
-        {!data && !loading && (
-          <div style={{ textAlign: "center", padding: "80px 0" }}>
-            <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 11, color: "#0d1e2c", letterSpacing: "0.3em", marginBottom: 32 }}>
-              AWAITING DAILY BRIEFING
-            </div>
-            <button className="briefing-btn" onClick={generate}>Run Today's Briefing</button>
-            <div style={{ marginTop: 20, fontSize: 12, color: "#1a2c3a", letterSpacing: "0.1em" }}>
-              Scans universe · checks macro · delivers your 5-minute action plan
-            </div>
-          </div>
-        )}
-
         {loading && (
-          <div style={{ textAlign: "center", padding: "80px 0" }}>
-            <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 11, color: "#00ff88", letterSpacing: "0.2em", marginBottom: 24, animation: "pulse 2s infinite" }}>
-              RUNNING ANALYSIS
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 20 }}>
-              {STEPS.map((_, i) => <div key={i} className={`step-dot ${i < loadStep ? "done" : i === loadStep ? "active" : ""}`} />)}
-            </div>
-            <div style={{ fontSize: 13, color: "#3a5060" }}>{STEPS[loadStep]}</div>
+          <div style={{ textAlign: "center", padding: "80px 0", fontSize: 11, color: "#2a4050", letterSpacing: "0.2em", animation: "pulse 2s infinite" }}>
+            LOADING TODAY'S BRIEFING...
           </div>
         )}
 
-        {data && sm && (
+        {!loading && status === "weekend" && (
+          <div style={{ textAlign: "center", padding: "80px 0" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🏖️</div>
+            <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 14, color: "#1a3040", letterSpacing: "0.2em", marginBottom: 12 }}>MARKETS CLOSED</div>
+            <div style={{ fontSize: 14, color: "#2a4050" }}>It's the weekend. Rest up.</div>
+            <div style={{ fontSize: 12, color: "#1a2535", marginTop: 8 }}>Next briefing: Monday at 9:25 AM ET.</div>
+          </div>
+        )}
+
+        {!loading && status === "pre-market" && (
+          <div style={{ textAlign: "center", padding: "80px 0" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>⏳</div>
+            <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 14, color: "#1a3040", letterSpacing: "0.2em", marginBottom: 12 }}>BRIEFING GENERATES AT 9:25 AM ET</div>
+            <div style={{ fontSize: 14, color: "#2a4050" }}>Current ET time: {getETTime()}</div>
+            <div style={{ fontSize: 12, color: "#1a2535", marginTop: 8 }}>Check back after 9:25 AM — ready before the open.</div>
+          </div>
+        )}
+
+        {!loading && status === "empty" && (
+          <div style={{ textAlign: "center", padding: "80px 0" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>📡</div>
+            <div style={{ fontFamily: "'Orbitron'", fontWeight: 900, fontSize: 14, color: "#1a3040", letterSpacing: "0.2em", marginBottom: 12 }}>BRIEFING NOT YET AVAILABLE</div>
+            <div style={{ fontSize: 14, color: "#2a4050", maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>
+              Today's briefing generates automatically at 9:25 AM ET. Check back shortly.
+            </div>
+          </div>
+        )}
+
+        {!loading && status === "ready" && data && sm && (
           <div style={{ animation: "fadein 0.5s ease" }}>
 
-            {/* Commander's Call */}
             <div style={{ background: sm.bg, border: `1px solid ${sm.color}30`, padding: "22px 24px", marginBottom: 14 }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 20, flexWrap: "wrap" }}>
                 <div style={{ textAlign: "center" }}>
@@ -211,9 +137,11 @@ export default function CommandPage() {
                   </div>
                 )}
               </div>
+              <div style={{ marginTop: 12, fontSize: 10, color: "#1a3040", letterSpacing: "0.1em" }}>
+                Generated {data.generatedAt} · {data.date}
+              </div>
             </div>
 
-            {/* Market Pulse */}
             <div className="grid-macro" style={{ marginBottom: 14 }}>
               {[
                 { label: "S&P vs 50 EMA", val: data.marketPulse?.spxVsEma, color: spxColor(data.marketPulse?.spxVsEma) },
@@ -228,7 +156,6 @@ export default function CommandPage() {
               ))}
             </div>
 
-            {/* Major Events */}
             {data.marketPulse?.majorEventsToday?.length > 0 && (
               <div className="card" style={{ marginBottom: 14, borderColor: "#ffd70020" }}>
                 <div className="lbl" style={{ color: "#8a7020" }}>⚡ Major Events Today</div>
@@ -240,7 +167,6 @@ export default function CommandPage() {
               </div>
             )}
 
-            {/* Nothing to do */}
             {data.nothingToDoNote && (
               <div className="card" style={{ marginBottom: 14, textAlign: "center", padding: "32px" }}>
                 <div style={{ fontSize: 32, marginBottom: 12 }}>🧘</div>
@@ -249,7 +175,6 @@ export default function CommandPage() {
               </div>
             )}
 
-            {/* Action Items */}
             {data.actionItems?.length > 0 && (
               <div style={{ marginBottom: 14 }}>
                 <div className="lbl" style={{ marginBottom: 10 }}>Action Items — {data.actionItems.length} setup{data.actionItems.length !== 1 ? "s" : ""} qualify today</div>
@@ -297,7 +222,6 @@ export default function CommandPage() {
               </div>
             )}
 
-            {/* Position Alerts */}
             {data.activePositionAlerts?.length > 0 && (
               <div className="card" style={{ marginBottom: 14 }}>
                 <div className="lbl" style={{ marginBottom: 10 }}>Active Position Alerts</div>
@@ -311,7 +235,6 @@ export default function CommandPage() {
               </div>
             )}
 
-            {/* Sentiment Flags */}
             {data.sentimentFlags?.length > 0 && (
               <div className="card" style={{ marginBottom: 14 }}>
                 <div className="lbl" style={{ marginBottom: 10 }}>Sentiment & News Flags</div>
@@ -324,7 +247,6 @@ export default function CommandPage() {
               </div>
             )}
 
-            {/* Bottom row */}
             <div className="grid-2">
               <div className="card">
                 <div className="lbl">Weekly Context</div>
@@ -336,12 +258,6 @@ export default function CommandPage() {
               </div>
             </div>
 
-            <div style={{ textAlign: "center", marginTop: 24 }}>
-              <button onClick={generate} style={{ background: "none", border: "1px solid #131f2e", color: "#2a4050", cursor: "pointer", fontFamily: "'Rajdhani'", fontSize: 12, letterSpacing: "0.12em", padding: "8px 20px", textTransform: "uppercase" }}>
-                Refresh Briefing
-              </button>
-              {data.generatedAt && <div style={{ fontSize: 10, color: "#1a2535", marginTop: 8 }}>Generated at {data.generatedAt}</div>}
-            </div>
           </div>
         )}
 
