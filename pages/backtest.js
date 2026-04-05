@@ -12,50 +12,12 @@ Use web search to get ${ticker}'s actual price history over the last ${weeks} we
 
 Output JSON only: {"ticker":"${ticker}","backtestWeeks":${weeks},"startDate":"","endDate":"","startPrice":0,"endPrice":0,"systemScore":0,"wouldHaveEntered":true,"entrySignalDate":"","entryPrice":0,"stopPrice":0,"target1Price":0,"target2Price":0,"outcome":"WIN_T1|WIN_T2|WIN_FULL|STOPPED_OUT|TIME_STOP|NO_ENTRY|EARNINGS_EXIT","exitPrice":0,"exitDate":"","pnlPercent":0,"holdDays":0,"stoppedOut":false,"hitTarget1":false,"hitTarget2":false,"weekByWeek":[{"week":1,"price":0,"action":"HOLD|ENTER|EXIT|WATCH","note":""}],"systemAccuracy":"","whatWorked":"","whatFailed":"","improvementSuggestion":"","verdict":"SYSTEM VALIDATED|SYSTEM NEEDS TUNING|INCONCLUSIVE"}`;
 
-const WEEKLY_AUTOPSY_PROMPT = `You are the internal auditor for SwingDesk swing trading system.
+const WEEKLY_AUTOPSY_PROMPT = `Weekly trade autopsy for SwingDesk.
+Today: ${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
 
-TODAY: ${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+Use web search to check: major index performance this week, leading/lagging sectors, significant moves in our universe (NVDA META AAPL MSFT GOOGL AMZN PLTR CRWD DDOG XLK XLE QQQ), major macro events, and what setups our system would have flagged Monday vs actual Friday outcomes.
 
-TASK: Generate a weekly trade autopsy. This is an honest, critical review of how our swing trading logic performed this week.
-
-Use web search to check:
-1. What did the major indices do this week (S&P, QQQ, IWM)?
-2. Which sectors led and which lagged?
-3. For our typical universe (NVDA, META, AAPL, MSFT, GOOGL, AMZN, PLTR, CRWD, DDOG, XLK, XLE, QQQ) — which ones moved significantly this week and in which direction?
-4. Were there any major macro events that impacted swing trade setups?
-5. What setups would our system have flagged Monday morning, and how did they actually perform by Friday?
-
-OUTPUT JSON only, no markdown:
-{
-  "weekOf": "date range",
-  "overallMarket": "BULLISH | CHOPPY | BEARISH",
-  "indexPerformance": {
-    "spy": "X%",
-    "qqq": "X%",
-    "iwm": "X%"
-  },
-  "leadingSectors": ["sector 1", "sector 2"],
-  "laggingSectors": ["sector 1", "sector 2"],
-  "systemGrade": "A | B | C | D | F",
-  "gradeReason": "One sentence on why this grade",
-  "hypotheticalTrades": [
-    {
-      "ticker": "...",
-      "wouldHaveEntered": true,
-      "entryDay": "Monday price approx",
-      "fridayPrice": "Friday close approx",
-      "result": "WIN | LOSS | FLAT",
-      "pnlEstimate": "X%",
-      "note": "One sentence"
-    }
-  ],
-  "bestCallThisWeek": "The setup our system would have nailed",
-  "worstMissThisWeek": "A setup we would have missed or gotten wrong",
-  "macroSurprises": ["Anything that happened this week that our sentiment layer should flag earlier next time"],
-  "systemTweaks": ["Specific improvements to consider based on this week"],
-  "nextWeekWatch": ["3-5 tickers/themes to watch next week based on this week's action"],
-  "traderNote": "One honest paragraph summarizing the week — what the market rewarded, what it punished, and what that means for next week's swing setups."
-}`;
+Output JSON only: {"weekOf":"","overallMarket":"BULLISH|CHOPPY|BEARISH","indexPerformance":{"spy":"","qqq":"","iwm":""},"leadingSectors":[],"laggingSectors":[],"systemGrade":"A|B|C|D|F","gradeReason":"","hypotheticalTrades":[{"ticker":"","wouldHaveEntered":true,"entryDay":"","fridayPrice":"","result":"WIN|LOSS|FLAT","pnlEstimate":"","note":""}],"bestCallThisWeek":"","worstMissThisWeek":"","macroSurprises":[],"systemTweaks":[],"nextWeekWatch":[],"traderNote":""}`;
 
 const outcomeColor = o => {
   if (!o) return "#8aa0b0";
