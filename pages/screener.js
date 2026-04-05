@@ -49,9 +49,10 @@ export default function ScreenerPage() {
     const sym = ticker.trim().toUpperCase();
     try {
       const parsed = await callClaude({
-        system: SWING_SYSTEM[assetType],
-        prompt: `Analyze ${sym} for a swing trade. Use web search for current price, recent price action, technicals, sector context, relevant news. Today is ${TODAY}.`,
-      });
+  system: SWING_SYSTEM[assetType],
+  prompt: `Analyze ${sym} for a swing trade...`,
+  maxTokens: 4000,
+});
       setResult(parsed);
       setHistory(prev => [{ ...parsed, analyzedAt: new Date().toLocaleTimeString() }, ...prev].slice(0, 8));
     } catch (e) { console.error(e); }
