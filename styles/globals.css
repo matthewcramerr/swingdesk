@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&family=Syne:wght@700;800&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background: #05080c;
+  color: #d4dde8;
+  font-family: 'Rajdhani', 'Arial Narrow', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: #05080c; }
+::-webkit-scrollbar-thumb { background: #1a2535; border-radius: 2px; }
+
+a { color: inherit; }
+
+/* Shared utility classes */
+.fadein {
+  animation: fadein 0.4s ease;
+}
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
