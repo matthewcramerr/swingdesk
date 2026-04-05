@@ -11,6 +11,7 @@ html, body {
   color: #d4dde8;
   font-family: 'Rajdhani', 'Arial Narrow', sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 ::-webkit-scrollbar { width: 3px; height: 3px; }
