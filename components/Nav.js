@@ -2,12 +2,11 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 
 const NAV_ITEMS = [
-  { href: "/",             label: "Command",     icon: "▲" },
-  { href: "/screener",     label: "Screener",    icon: "◈" },
-  { href: "/trades",       label: "Trades",      icon: "⊞" },
-  { href: "/portfolio",    label: "Portfolio",   icon: "◉" },
-  { href: "/backtest",     label: "Backtest",    icon: "◎" },
-  { href: "/methodology",  label: "Methodology", icon: "⊙" },
+  { href: "/",          label: "Command",   icon: "▲" },
+  { href: "/screener",  label: "Screener",  icon: "◈" },
+  { href: "/trades",    label: "Trades",    icon: "⊞" },
+  { href: "/portfolio", label: "Portfolio", icon: "◉" },
+  { href: "/backtest",  label: "Backtest",  icon: "◎" },
 ];
 
 export default function Nav() {
@@ -29,7 +28,6 @@ export default function Nav() {
           <span style={{ fontFamily: "'Orbitron', monospace", fontWeight: 900, fontSize: 16, color: "#00ff88", letterSpacing: "0.08em" }}>
             SWINGDESK
           </span>
-          <span style={{ fontSize: 9, color: "#1a3040", letterSpacing: "0.15em", display: "none" }}>PRIVATE</span>
         </Link>
 
         {/* Nav links */}
